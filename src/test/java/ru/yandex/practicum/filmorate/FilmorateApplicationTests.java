@@ -165,7 +165,7 @@ class FilmorateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Good film");
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120L);
 
         Film result = filmController.addNewFilm(film);
 
@@ -179,7 +179,7 @@ class FilmorateApplicationTests {
         Film film = new Film();
         film.setDescription("Good film");
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120L);
 
         assertThrows(ValidationException.class, () -> filmController.addNewFilm(film));
     }
@@ -192,7 +192,7 @@ class FilmorateApplicationTests {
         film.setName("Test Film");
         film.setDescription(longDescription);
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120L);
 
         assertThrows(ValidationException.class, () -> filmController.addNewFilm(film));
     }
@@ -204,7 +204,7 @@ class FilmorateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Good film");
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120L);
 
         assertThrows(ValidationException.class, () -> filmController.addNewFilm(film));
     }
@@ -216,7 +216,7 @@ class FilmorateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Good film");
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
-        film.setDuration(Duration.ofMinutes(-10));
+        film.setDuration(-10L);
 
         assertThrows(ValidationException.class, () -> filmController.addNewFilm(film));
     }
@@ -228,7 +228,7 @@ class FilmorateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Good film");
         film.setReleaseDate(LocalDate.of(2020, 1, 1));
-        film.setDuration(Duration.ZERO);
+        film.setDuration(0L);
 
         assertThrows(ValidationException.class, () -> filmController.addNewFilm(film));
     }
@@ -260,7 +260,7 @@ class FilmorateApplicationTests {
         originalFilm.setName("Original Film");
         originalFilm.setDescription("Original description");
         originalFilm.setReleaseDate(LocalDate.of(2020, 1, 1));
-        originalFilm.setDuration(Duration.ofMinutes(120));
+        originalFilm.setDuration(120L);
         Film addedFilm = filmController.addNewFilm(originalFilm);
 
         // Теперь обновляем
