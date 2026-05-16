@@ -12,7 +12,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Collection;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,7 +21,6 @@ class FilmorateApplicationTests {
 
     private UserController userController = new UserController();
     private FilmController filmController = new FilmController();
-
 
 
     @Test
