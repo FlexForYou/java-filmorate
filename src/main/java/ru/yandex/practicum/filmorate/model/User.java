@@ -7,8 +7,8 @@ import java.time.LocalDate;
 
 @Data
 public class User {
-    private Long id;
 
+    private Long id;
     @Email(message = "Некорректный формат email")
     private String email;
     private String login;
