@@ -93,7 +93,7 @@ public class FilmController {
             log.error("Ошибка валидации: дата релиза фильма '{}' не может быть раньше 28 декабря: {}", film.getName(), film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
-        if (film.getDuration().isNegative() || film.getDuration().isZero()) {
+        if (film.getDuration()<0) {
             log.error("Ошибка валидации: продолжительность фильма '{}' некорректна: {}", film.getName(), film.getDuration());
             throw new ValidationException("Продолжительность должна быть положительным числом");
         }
