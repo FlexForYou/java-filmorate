@@ -41,6 +41,7 @@ public class ErrorHandler  {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         log.error("Внутренняя ошибка сервера: {}", ex.getMessage(), ex);
