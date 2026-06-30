@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +28,10 @@ public class UserController {
     }
 
     @PostMapping
-    public User addNewUser(@RequestBody User user) {
+    public User addNewUser(@RequestBody @Valid User user) {
         log.debug("Попытка добавления нового пользователя с логином: {}", user.getLogin());
 
-        validateUser(user);
+        setDefaultNameIfEmpty(user);
 
         User addedUser = userStorage.add(user);
 
@@ -39,7 +40,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@RequestBody @Valid User user) {
         log.debug("Попытка обновления пользователя с ID: {}", user.getId());
 
         if (user.getId() == null) {
@@ -77,7 +78,7 @@ public class UserController {
                     existingUser.getLogin(), user.getLogin());
             existingUser.setLogin(user.getLogin());
         }
-
+        setDefaultNameIfEmpty(existingUser);
 
         User updatedUser = userStorage.update(existingUser);
         log.info("Пользователь с ID {} успешно обновлен", updatedUser.getId());
@@ -139,8 +140,7 @@ public class UserController {
         return userService.getCommonFriends(id, otherId);
     }
 
-
-    private void validateUser(User user) {
+    private void setDefaultNameIfEmpty(User user) {
         if (user.getName() == null || user.getName().trim().isEmpty()) {
             log.debug("Имя пользователя не указано, устанавливаем имя равным логину: {}", user.getLogin());
             user.setName(user.getLogin());

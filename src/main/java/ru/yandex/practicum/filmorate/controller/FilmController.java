@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -30,10 +31,10 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film addNewFilm(@RequestBody final Film film) {
+    public Film addNewFilm(@RequestBody @Valid  final Film film) {
         log.debug("Попытка добавления нового фильма: {}", film.getName());
 
-        validateFilm(film);
+        validateReleaseDate(film);
 
         Film addedFilm = filmStorage.add(film);
 
@@ -42,7 +43,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) {
+    public Film updateFilm(@RequestBody @Valid  Film film) {
         log.debug("Попытка обновления фильма с ID: {}", film.getId());
 
         if (film.getId() == null) {
@@ -77,7 +78,7 @@ public class FilmController {
             log.debug("Обновление даты релиза фильма с '{}' на '{}'", existingFilm.getReleaseDate(), film.getReleaseDate());
             existingFilm.setReleaseDate(film.getReleaseDate());
         }
-
+        validateReleaseDate(existingFilm);
 
         Film updatedFilm = filmStorage.update(existingFilm);
         log.info("Фильм с ID {} успешно обновлен", updatedFilm.getId());
@@ -134,16 +135,12 @@ public class FilmController {
     }
 
 
-    private void validateFilm(Film film) {
-
+    private void validateReleaseDate(Film film) {
         if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.error("Ошибка валидации: дата релиза фильма '{}' не может быть раньше 28 декабря 1895 года: {}",
                     film.getName(), film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
-
-        log.debug("Фильм '{}' прошел валидацию", film.getName());
     }
-
 
 }
