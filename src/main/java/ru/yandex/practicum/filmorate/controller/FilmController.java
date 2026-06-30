@@ -135,31 +135,11 @@ public class FilmController {
 
 
     private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().trim().isEmpty()) {
-            log.error("Ошибка валидации: название фильма не может быть пустым");
-            throw new ValidationException("Название не может быть пустым");
-        }
 
-        if (film.getDescription() == null || film.getDescription().length() > 200) {
-            log.error("Ошибка валидации: описание фильма '{}' превышает 200 символов", film.getName());
-            throw new ValidationException("Максимальная длина описания — 200 символов");
-        }
-
-        if (film.getReleaseDate() == null) {
-            log.error("Ошибка валидации: дата релиза не указана");
-            throw new ValidationException("Дата релиза должна быть указана");
-        }
-
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             log.error("Ошибка валидации: дата релиза фильма '{}' не может быть раньше 28 декабря 1895 года: {}",
                     film.getName(), film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
-
-        if (film.getDuration() == null || film.getDuration() <= 0) {
-            log.error("Ошибка валидации: продолжительность фильма '{}' некорректна: {}",
-                    film.getName(), film.getDuration());
-            throw new ValidationException("Продолжительность должна быть положительным числом");
         }
 
         log.debug("Фильм '{}' прошел валидацию", film.getName());

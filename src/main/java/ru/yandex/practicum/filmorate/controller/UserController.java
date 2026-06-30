@@ -144,40 +144,11 @@ public class UserController {
 
 
     private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            log.error("Ошибка валидации: email пользователя не может быть пустым");
-            throw new ValidationException("Электронная почта не может быть пустой");
-        }
-
-        if (!user.getEmail().contains("@")) {
-            log.error("Ошибка валидации: email '{}' не содержит символ @", user.getEmail());
-            throw new ValidationException("Электронная почта должна содержать символ @");
-        }
-
-        if (user.getLogin() == null || user.getLogin().trim().isEmpty()) {
-            log.error("Ошибка валидации: логин пользователя не может быть пустым");
-            throw new ValidationException("Логин не может быть пустым");
-        }
-
-        if (user.getLogin().contains(" ")) {
-            log.error("Ошибка валидации: логин '{}' содержит пробелы", user.getLogin());
-            throw new ValidationException("Логин не может содержать пробелы");
-        }
-
         if (user.getName() == null || user.getName().trim().isEmpty()) {
             log.debug("Имя пользователя не указано, устанавливаем имя равным логину: {}", user.getLogin());
             user.setName(user.getLogin());
         }
-
-        if (user.getBirthday() == null) {
-            log.error("Ошибка валидации: дата рождения пользователя не может быть пустой");
-            throw new ValidationException("Дата рождения не может быть пустой");
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка валидации: дата рождения {} в будущем", user.getBirthday());
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+        log.debug("Пользователь с логином '{}' прошел валидацию", user.getLogin());
     }
 
 
