@@ -104,9 +104,9 @@ public class UserDbStorage implements UserStorage {
     public void addFriend(Long userId, Long friendId) {
 
         String sql = """
-            INSERT INTO friendships(user_id, friend_id, status_id)
-            VALUES (?, ?, ?)
-            """;
+                INSERT INTO friendships(user_id, friend_id, status_id)
+                VALUES (?, ?, ?)
+                """;
 
         jdbcTemplate.update(sql, userId, friendId, 2);
     }
@@ -115,10 +115,10 @@ public class UserDbStorage implements UserStorage {
     public void removeFriend(Long userId, Long friendId) {
 
         String sql = """
-            DELETE FROM friendships
-            WHERE user_id = ?
-            AND friend_id = ?
-            """;
+                DELETE FROM friendships
+                WHERE user_id = ?
+                AND friend_id = ?
+                """;
 
         jdbcTemplate.update(sql, userId, friendId);
     }
@@ -127,13 +127,13 @@ public class UserDbStorage implements UserStorage {
     public List<User> getFriends(Long userId) {
 
         String sql = """
-            SELECT u.*
-            FROM users u
-            JOIN friendships f
-              ON u.id = f.friend_id
-            WHERE f.user_id = ?
-              AND f.status_id = 1
-            """;
+                SELECT u.*
+                FROM users u
+                JOIN friendships f
+                  ON u.id = f.friend_id
+                WHERE f.user_id = ?
+                  AND f.status_id = 1
+                """;
 
         return jdbcTemplate.query(sql, userRowMapper, userId);
     }
@@ -142,17 +142,17 @@ public class UserDbStorage implements UserStorage {
     public List<User> getCommonFriends(Long userId, Long otherUserId) {
 
         String sql = """
-            SELECT u.*
-            FROM users u
-            JOIN friendships f1
-              ON u.id = f1.friend_id
-            JOIN friendships f2
-              ON u.id = f2.friend_id
-            WHERE f1.user_id = ?
-              AND f2.user_id = ?
-              AND f1.status_id = 1
-              AND f2.status_id = 1
-            """;
+                SELECT u.*
+                FROM users u
+                JOIN friendships f1
+                  ON u.id = f1.friend_id
+                JOIN friendships f2
+                  ON u.id = f2.friend_id
+                WHERE f1.user_id = ?
+                  AND f2.user_id = ?
+                  AND f1.status_id = 1
+                  AND f2.status_id = 1
+                """;
 
         return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
     }
@@ -160,10 +160,10 @@ public class UserDbStorage implements UserStorage {
     public void acceptFriend(Long userId, Long friendId) {
         // Обновляем статус заявки на подтвержденный (status_id = 1)
         String sql = """
-        UPDATE friendships 
-        SET status_id = 1 
-        WHERE user_id = ? AND friend_id = ?
-        """;
+                UPDATE friendships 
+                SET status_id = 1 
+                WHERE user_id = ? AND friend_id = ?
+                """;
 
         int updated = jdbcTemplate.update(sql, userId, friendId);
 
@@ -173,26 +173,26 @@ public class UserDbStorage implements UserStorage {
 
         // Создаем обратную запись о дружбе (если ее нет)
         String checkSql = """
-        SELECT COUNT(*) FROM friendships 
-        WHERE user_id = ? AND friend_id = ?
-        """;
+                SELECT COUNT(*) FROM friendships 
+                WHERE user_id = ? AND friend_id = ?
+                """;
 
         Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, friendId, userId);
 
         if (count == 0) {
             // Создаем обратную запись с подтвержденным статусом
             String insertSql = """
-            INSERT INTO friendships (user_id, friend_id, status_id) 
-            VALUES (?, ?, 1)
-            """;
+                    INSERT INTO friendships (user_id, friend_id, status_id) 
+                    VALUES (?, ?, 1)
+                    """;
             jdbcTemplate.update(insertSql, friendId, userId);
         } else {
             // Обновляем обратную запись
             String updateSql = """
-            UPDATE friendships 
-            SET status_id = 1 
-            WHERE user_id = ? AND friend_id = ?
-            """;
+                    UPDATE friendships 
+                    SET status_id = 1 
+                    WHERE user_id = ? AND friend_id = ?
+                    """;
             jdbcTemplate.update(updateSql, friendId, userId);
         }
     }
@@ -201,13 +201,13 @@ public class UserDbStorage implements UserStorage {
     public List<User> getPendingFriends(Long userId) {
         // Получаем неподтвержденные заявки (status_id = 2)
         String sql = """
-        SELECT u.*
-        FROM users u
-        JOIN friendships f
-          ON u.id = f.friend_id
-        WHERE f.user_id = ?
-          AND f.status_id = 2
-        """;
+                SELECT u.*
+                FROM users u
+                JOIN friendships f
+                  ON u.id = f.friend_id
+                WHERE f.user_id = ?
+                  AND f.status_id = 2
+                """;
 
         return jdbcTemplate.query(sql, userRowMapper, userId);
     }
