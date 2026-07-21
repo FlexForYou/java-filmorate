@@ -202,6 +202,7 @@ public class UserDbStorage implements UserStorage {
 
         return jdbcTemplate.query(sql, userRowMapper, userId);
     }
+
     public boolean areFriends(Long userId, Long friendId) {
         String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status_id = 1";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
