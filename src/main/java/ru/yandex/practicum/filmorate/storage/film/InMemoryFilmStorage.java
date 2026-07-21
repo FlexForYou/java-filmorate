@@ -12,6 +12,7 @@ import java.util.Optional;
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
 
+
     @Override
     public Film add(Film film) {
         film.setId(getNextId());

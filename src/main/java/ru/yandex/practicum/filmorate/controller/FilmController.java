@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -19,31 +19,25 @@ import java.util.List;
 @RequestMapping("/films")
 public class FilmController {
 
-
     private final FilmStorage filmStorage;
     private final FilmService filmService;
 
-    // конструктор для внедрения зависимостей через конструктор
-    @Autowired  // аннотация для внедрения зависимостей
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
+    public FilmController(@Qualifier("filmDbStorage") FilmStorage filmStorage, FilmService filmService) {
         this.filmStorage = filmStorage;
         this.filmService = filmService;
     }
 
     @PostMapping
-    public Film addNewFilm(@RequestBody @Valid  final Film film) {
+    public Film addNewFilm(@RequestBody @Valid Film film) {
         log.debug("Попытка добавления нового фильма: {}", film.getName());
-
         validateReleaseDate(film);
-
         Film addedFilm = filmStorage.add(film);
-
         log.info("Фильм успешно добавлен с ID {}: {}", addedFilm.getId(), addedFilm.getName());
         return addedFilm;
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody @Valid  Film film) {
+    public Film updateFilm(@RequestBody @Valid Film film) {
         log.debug("Попытка обновления фильма с ID: {}", film.getId());
 
         if (film.getId() == null) {
@@ -51,33 +45,32 @@ public class FilmController {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
 
-
         Film existingFilm = filmStorage.findById(film.getId())
                 .orElseThrow(() -> {
                     log.warn("Попытка обновления несуществующего фильма с ID: {}", film.getId());
                     return new ConditionsNotMetException("Фильм с указанным ID не найден");
                 });
 
-
         if (film.getName() != null) {
-            log.debug("Обновление названия фильма с '{}' на '{}'", existingFilm.getName(), film.getName());
             existingFilm.setName(film.getName());
         }
-
         if (film.getDescription() != null) {
-            log.debug("Обновление описания фильма с '{}' на '{}'", existingFilm.getDescription(), film.getDescription());
             existingFilm.setDescription(film.getDescription());
         }
-
         if (film.getDuration() != null) {
-            log.debug("Обновление длительности фильма с '{}' на '{}'", existingFilm.getDuration(), film.getDuration());
             existingFilm.setDuration(film.getDuration());
         }
-
         if (film.getReleaseDate() != null) {
-            log.debug("Обновление даты релиза фильма с '{}' на '{}'", existingFilm.getReleaseDate(), film.getReleaseDate());
             existingFilm.setReleaseDate(film.getReleaseDate());
         }
+        // Обновляем MPA и жанры
+        if (film.getMpa() != null) {
+            existingFilm.setMpa(film.getMpa());
+        }
+        if (film.getGenres() != null) {
+            existingFilm.setGenres(film.getGenres());
+        }
+
         validateReleaseDate(existingFilm);
 
         Film updatedFilm = filmStorage.update(existingFilm);
@@ -88,11 +81,9 @@ public class FilmController {
     @GetMapping
     public Collection<Film> getAllFilms() {
         log.debug("Запрос списка всех фильмов");
-
         return filmStorage.findAll();
     }
 
-    // эндпоинт для получения фильма по ID
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable Long id) {
         log.debug("Запрос фильма с ID: {}", id);
@@ -103,7 +94,6 @@ public class FilmController {
                 });
     }
 
-    // эндпоинт для удаления фильма
     @DeleteMapping("/{id}")
     public void deleteFilm(@PathVariable Long id) {
         log.debug("Попытка удаления фильма с ID: {}", id);
@@ -111,7 +101,6 @@ public class FilmController {
         log.info("Фильм с ID {} успешно удален", id);
     }
 
-    // эндпоинт для добавления лайка
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.debug("Пользователь {} ставит лайк фильму {}", userId, id);
@@ -119,7 +108,6 @@ public class FilmController {
         log.info("Пользователь {} поставил лайк фильму {}", userId, id);
     }
 
-    // эндпоинт для удаления лайка
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.debug("Пользователь {} удаляет лайк с фильма {}", userId, id);
@@ -127,13 +115,11 @@ public class FilmController {
         log.info("Пользователь {} удалил лайк с фильма {}", userId, id);
     }
 
-    // эндпоинт для получения популярных фильмов
     @GetMapping("/popular")
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") Integer count) {
         log.debug("Запрос {} наиболее популярных фильмов", count);
-        return filmService.getTopFilms(count);
+        return (List<Film>) filmService.getTopFilms(count);
     }
-
 
     private void validateReleaseDate(Film film) {
         if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
@@ -142,5 +128,4 @@ public class FilmController {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
     }
-
 }

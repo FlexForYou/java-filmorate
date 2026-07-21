@@ -2,12 +2,13 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -16,13 +17,10 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
-
     private final UserStorage userStorage;
     private final UserService userService;
 
-
-    @Autowired
-    public UserController(UserStorage userStorage, UserService userService) {
+    public UserController(@Qualifier("userDbStorage") UserStorage userStorage, UserService userService) {
         this.userStorage = userStorage;
         this.userService = userService;
     }
@@ -30,11 +28,8 @@ public class UserController {
     @PostMapping
     public User addNewUser(@RequestBody @Valid User user) {
         log.debug("Попытка добавления нового пользователя с логином: {}", user.getLogin());
-
         setDefaultNameIfEmpty(user);
-
         User addedUser = userStorage.add(user);
-
         log.info("Пользователь успешно добавлен с ID {}: {}", addedUser.getId(), addedUser.getLogin());
         return addedUser;
     }
@@ -48,34 +43,22 @@ public class UserController {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
 
-
         User existingUser = userStorage.findById(user.getId())
                 .orElseThrow(() -> {
                     log.warn("Попытка обновления несуществующего пользователя с ID: {}", user.getId());
                     return new ConditionsNotMetException("Пользователь с указанным ID не найден");
                 });
 
-
         if (user.getName() != null) {
-            log.debug("Обновление имени пользователя с '{}' на '{}'", existingUser.getName(), user.getName());
             existingUser.setName(user.getName());
         }
-
         if (user.getBirthday() != null) {
-            log.debug("Обновление дня рождения пользователя с '{}' на '{}'",
-                    existingUser.getBirthday(), user.getBirthday());
             existingUser.setBirthday(user.getBirthday());
         }
-
         if (user.getEmail() != null) {
-            log.debug("Обновление email пользователя с '{}' на '{}'",
-                    existingUser.getEmail(), user.getEmail());
             existingUser.setEmail(user.getEmail());
         }
-
         if (user.getLogin() != null) {
-            log.debug("Обновление логина пользователя с '{}' на '{}'",
-                    existingUser.getLogin(), user.getLogin());
             existingUser.setLogin(user.getLogin());
         }
         setDefaultNameIfEmpty(existingUser);
@@ -91,7 +74,6 @@ public class UserController {
         return userStorage.findAll();
     }
 
-
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
         log.debug("Запрос пользователя с ID: {}", id);
@@ -102,7 +84,6 @@ public class UserController {
                 });
     }
 
-    // эндпоинт для удаления пользователя
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         log.debug("Попытка удаления пользователя с ID: {}", id);
@@ -110,15 +91,23 @@ public class UserController {
         log.info("Пользователь с ID {} успешно удален", id);
     }
 
-    // эндпоинт для добавления друга
+    // Добавление друга (отправка заявки)
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.debug("Пользователь {} добавляет в друзья пользователя {}", id, friendId);
+        log.debug("Пользователь {} отправляет заявку в друзья пользователю {}", id, friendId);
         userService.addFriend(id, friendId);
-        log.info("Пользователь {} и {} теперь друзья", id, friendId);
+        log.info("Заявка в друзья отправлена от {} к {}", id, friendId);
     }
 
-    // эндпоинт для удаления друга
+    // Подтверждение дружбы
+    @PutMapping("/{id}/friends/{friendId}/accept")
+    public void acceptFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.debug("Пользователь {} подтверждает дружбу с {}", id, friendId);
+        userService.acceptFriend(id, friendId);
+        log.info("Дружба подтверждена между {} и {}", id, friendId);
+    }
+
+    // Удаление друга
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.debug("Пользователь {} удаляет из друзей пользователя {}", id, friendId);
@@ -126,14 +115,21 @@ public class UserController {
         log.info("Пользователь {} и {} больше не друзья", id, friendId);
     }
 
-    // эндпоинт для получения списка друзей
+    // Получение списка друзей (только подтвержденные)
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable Long id) {
         log.debug("Запрос списка друзей пользователя {}", id);
         return userService.getUserFriends(id);
     }
 
-    // эндпоинт для получения общих друзей
+    // Получение списка заявок в друзья (неподтвержденные)
+    @GetMapping("/{id}/friends/pending")
+    public List<User> getPendingFriends(@PathVariable Long id) {
+        log.debug("Запрос списка заявок в друзья пользователя {}", id);
+        return userService.getPendingFriends(id);
+    }
+
+    // Получение общих друзей
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
         log.debug("Запрос общих друзей пользователей {} и {}", id, otherId);
@@ -147,6 +143,4 @@ public class UserController {
         }
         log.debug("Пользователь с логином '{}' прошел валидацию", user.getLogin());
     }
-
-
 }
