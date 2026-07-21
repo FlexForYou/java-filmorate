@@ -7,5 +7,7 @@ import java.util.Optional;
 
 public interface MpaStorage {
     Optional<Mpa> findById(Integer id);
+
     Collection<Mpa> findAll();
+
 }
