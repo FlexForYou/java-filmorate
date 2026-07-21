@@ -6,5 +6,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class FriendshipStatus {
     private Integer id;
-    private String nameStatus;
+    private String name;
 }

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 
 
 import java.util.Collection;
@@ -20,7 +21,7 @@ public class FilmService {
     public void addLike(Long filmId, Long userId) {
 
         if (!filmStorage.existsById(filmId)) {
-            throw new RuntimeException("Фильм не найден");
+            throw new ConditionsNotMetException("Фильм не найден");
         }
 
         filmStorage.addLike(filmId, userId);
@@ -29,7 +30,7 @@ public class FilmService {
     public void removeLike(Long filmId, Long userId) {
 
         if (!filmStorage.existsById(filmId)) {
-            throw new RuntimeException("Фильм не найден");
+            throw new ConditionsNotMetException("Фильм не найден");
         }
 
         filmStorage.removeLike(filmId, userId);

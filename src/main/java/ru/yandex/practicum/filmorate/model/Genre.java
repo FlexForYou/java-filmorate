@@ -7,5 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class Genre {
     private Integer id;
-    private String nameGenre;
+    private String name;
 }

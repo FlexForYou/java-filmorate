@@ -10,13 +10,13 @@ CREATE TABLE IF NOT EXISTS users (
 -- Рейтинг MPA
 CREATE TABLE IF NOT EXISTS mpa (
     id INT PRIMARY KEY,
-    nameMpa VARCHAR(20) NOT NULL
+    name VARCHAR(20) NOT NULL
 );
 
 -- Жанры
 CREATE TABLE IF NOT EXISTS genres (
     id INT PRIMARY KEY,
-    nameGenre VARCHAR(50) NOT NULL
+    name VARCHAR(50) NOT NULL
 );
 
 -- Фильмы
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS film_likes (
 -- Статусы дружбы
 CREATE TABLE IF NOT EXISTS friendship_statuses (
     id INT PRIMARY KEY,
-    nameStatus VARCHAR(20) NOT NULL
+    name VARCHAR(20) NOT NULL
 );
 
 -- Дружба пользователей

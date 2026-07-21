@@ -138,22 +138,14 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(sql, userRowMapper, userId);
     }
 
-
     public List<User> getCommonFriends(Long userId, Long otherUserId) {
-
-        String sql = """
-                SELECT u.*
-                FROM users u
-                JOIN friendships f1
-                  ON u.id = f1.friend_id
-                JOIN friendships f2
-                  ON u.id = f2.friend_id
-                WHERE f1.user_id = ?
-                  AND f2.user_id = ?
-                  AND f1.status_id = 1
-                  AND f2.status_id = 1
-                """;
-
+        String sql = "SELECT u.* FROM users u " +
+                "WHERE u.id IN (" +
+                "   SELECT f1.friend_id FROM friendships f1 " +
+                "   JOIN friendships f2 ON f1.friend_id = f2.friend_id " +
+                "   WHERE f1.user_id = ? AND f1.status_id = 1 " +
+                "   AND f2.user_id = ? AND f2.status_id = 1" +
+                ")";
         return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
     }
 
@@ -197,7 +189,6 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
-
     public List<User> getPendingFriends(Long userId) {
         // Получаем неподтвержденные заявки (status_id = 2)
         String sql = """
@@ -210,5 +201,16 @@ public class UserDbStorage implements UserStorage {
                 """;
 
         return jdbcTemplate.query(sql, userRowMapper, userId);
+    }
+    public boolean areFriends(Long userId, Long friendId) {
+        String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status_id = 1";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
+        return count != null && count > 0;
+    }
+
+    public boolean hasPendingRequest(Long userId, Long friendId) {
+        String sql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ? AND status_id = 2";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
+        return count != null && count > 0;
     }
 }

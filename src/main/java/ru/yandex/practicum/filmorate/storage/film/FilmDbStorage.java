@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -39,9 +40,11 @@ public class FilmDbStorage implements FilmStorage {
 
             // Добавляем mpa_id
             if (film.getMpa() != null) {
-                ps.setInt(5, film.getMpa().getId());
-            } else {
-                ps.setNull(5, java.sql.Types.INTEGER);
+                String checkSql = "SELECT COUNT(*) FROM mpa WHERE id = ?";
+                Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, film.getMpa().getId());
+                if (count == null || count == 0) {
+                    throw new ConditionsNotMetException("MPA с id " + film.getMpa().getId() + " не найден");
+                }
             }
 
             return ps;
@@ -146,7 +149,14 @@ public class FilmDbStorage implements FilmStorage {
 
     private void saveGenres(Long filmId, Collection<Genre> genres) {
         String sql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+
+        // Проверяем существование жанров
         for (Genre genre : genres) {
+            String checkSql = "SELECT COUNT(*) FROM genres WHERE id = ?";
+            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, genre.getId());
+            if (count == null || count == 0) {
+                throw new ConditionsNotMetException("Жанр с id " + genre.getId() + " не найден");
+            }
             jdbcTemplate.update(sql, filmId, genre.getId());
         }
     }
