@@ -27,6 +27,15 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film add(Film film) {
+        // Проверяем существование MPA
+        if (film.getMpa() != null && film.getMpa().getId() != null) {
+            String checkSql = "SELECT COUNT(*) FROM mpa WHERE id = ?";
+            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, film.getMpa().getId());
+            if (count == null || count == 0) {
+                throw new ConditionsNotMetException("MPA с id " + film.getMpa().getId() + " не найден");
+            }
+        }
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -39,12 +48,10 @@ public class FilmDbStorage implements FilmStorage {
             ps.setInt(4, film.getDuration());
 
             // Добавляем mpa_id
-            if (film.getMpa() != null) {
-                String checkSql = "SELECT COUNT(*) FROM mpa WHERE id = ?";
-                Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, film.getMpa().getId());
-                if (count == null || count == 0) {
-                    throw new ConditionsNotMetException("MPA с id " + film.getMpa().getId() + " не найден");
-                }
+            if (film.getMpa() != null && film.getMpa().getId() != null) {
+                ps.setInt(5, film.getMpa().getId());
+            } else {
+                ps.setNull(5, java.sql.Types.INTEGER);
             }
 
             return ps;
