@@ -214,4 +214,16 @@ public class UserDbStorage implements UserStorage {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
         return count != null && count > 0;
     }
+
+    public void addFriendDirect(Long userId, Long friendId) {
+        // Проверяем, нет ли уже записи
+        String checkSql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
+
+        if (count == 0) {
+            // Добавляем сразу с подтверждённым статусом (1)
+            String sql = "INSERT INTO friendships (user_id, friend_id, status_id) VALUES (?, ?, ?)";
+            jdbcTemplate.update(sql, userId, friendId, 1);
+        }
+    }
 }

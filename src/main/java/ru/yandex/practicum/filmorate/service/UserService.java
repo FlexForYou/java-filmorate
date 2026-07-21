@@ -19,7 +19,7 @@ public class UserService {
     @Qualifier("userDbStorage")
     private final UserDbStorage userStorage;
 
-    public void addFriend(Long userId, Long friendId) {
+    public User addFriend(Long userId, Long friendId) {
         if (!userStorage.existsById(userId)) {
             throw new ConditionsNotMetException("Пользователь не найден");
         }
@@ -27,20 +27,14 @@ public class UserService {
             throw new ConditionsNotMetException("Друг не найден");
         }
 
-        // Проверяем, не являются ли уже друзьями
-        if (userStorage.areFriends(userId, friendId)) {
-            return; // Уже друзья
+        if (userStorage.hasPendingRequest(friendId, userId)) {
+            userStorage.acceptFriend(userId, friendId);
+        } else if (!userStorage.areFriends(userId, friendId) && !userStorage.hasPendingRequest(userId, friendId)) {
+            userStorage.addFriendDirect(userId, friendId);
         }
 
-        // Проверяем, есть ли входящая заявка
-        if (userStorage.hasPendingRequest(friendId, userId)) {
-            // Автоматически подтверждаем дружбу
-            userStorage.acceptFriend(friendId, userId);
-            userStorage.acceptFriend(userId, friendId);
-        } else {
-            // Отправляем заявку
-            userStorage.addFriend(userId, friendId);
-        }
+        return userStorage.findById(friendId)
+                .orElseThrow(() -> new ConditionsNotMetException("Друг не найден"));
     }
 
     public void acceptFriend(Long userId, Long friendId) {

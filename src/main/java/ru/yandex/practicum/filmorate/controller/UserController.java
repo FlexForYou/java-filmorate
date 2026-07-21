@@ -93,10 +93,11 @@ public class UserController {
 
     // Добавление друга (отправка заявки)
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.debug("Пользователь {} отправляет заявку в друзья пользователю {}", id, friendId);
-        userService.addFriend(id, friendId);
+        User friend = userService.addFriend(id, friendId);
         log.info("Заявка в друзья отправлена от {} к {}", id, friendId);
+        return friend;
     }
 
     // Подтверждение дружбы

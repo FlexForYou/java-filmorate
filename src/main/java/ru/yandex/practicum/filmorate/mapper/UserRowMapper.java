@@ -28,10 +28,9 @@ public class UserRowMapper implements RowMapper<User> {
         user.setName(rs.getString("name"));
         user.setBirthday(rs.getDate("birthday").toLocalDate());
 
-        // Загружаем только подтвержденных друзей (status_id = 1)
+        // Загружаем ВСЕХ друзей (не только подтвержденных)
         try {
-            String friendsSql = "SELECT friend_id FROM friendships " +
-                    "WHERE user_id = ? AND status_id = 1"; // 1 - подтверждённая
+            String friendsSql = "SELECT friend_id FROM friendships WHERE user_id = ?";
             List<Long> friends = jdbcTemplate.queryForList(friendsSql, Long.class, user.getId());
             user.setFriends(new HashSet<>(friends));
         } catch (Exception e) {

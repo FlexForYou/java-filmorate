@@ -34,11 +34,11 @@ public class FilmRowMapper implements RowMapper<Film> {
         try {
             Integer mpaId = rs.getInt("mpa_id");
             if (mpaId != null && mpaId > 0) {
-                String mpaSql = "SELECT id, nameMpa FROM mpa WHERE id = ?";
+                String mpaSql = "SELECT id, name FROM mpa WHERE id = ?";
                 Mpa mpa = jdbcTemplate.queryForObject(mpaSql,
                         (resultSet, num) -> new Mpa(
                                 resultSet.getInt("id"),
-                                resultSet.getString("nameMpa")
+                                resultSet.getString("name")
                         ), mpaId);
                 film.setMpa(mpa);
             }
@@ -48,14 +48,14 @@ public class FilmRowMapper implements RowMapper<Film> {
 
         // Загружаем жанры
         try {
-            String genresSql = "SELECT g.id, g.nameGenre FROM genres g " +
+            String genresSql = "SELECT g.id, g.name FROM genres g " +
                     "JOIN film_genres fg ON g.id = fg.genre_id " +
                     "WHERE fg.film_id = ? " +
                     "ORDER BY g.id";
             List<Genre> genres = jdbcTemplate.query(genresSql,
                     (resultSet, num) -> new Genre(
                             resultSet.getInt("id"),
-                            resultSet.getString("nameGenre")
+                            resultSet.getString("name")
                     ), film.getId());
             film.setGenres(new HashSet<>(genres));
         } catch (Exception e) {
