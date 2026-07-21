@@ -160,8 +160,8 @@ public class UserDbStorage implements UserStorage {
     public void acceptFriend(Long userId, Long friendId) {
         // Обновляем статус заявки на подтвержденный (status_id = 1)
         String sql = """
-                UPDATE friendships 
-                SET status_id = 1 
+                UPDATE friendships
+                SET status_id = 1
                 WHERE user_id = ? AND friend_id = ?
                 """;
 
@@ -173,7 +173,7 @@ public class UserDbStorage implements UserStorage {
 
         // Создаем обратную запись о дружбе (если ее нет)
         String checkSql = """
-                SELECT COUNT(*) FROM friendships 
+                SELECT COUNT(*) FROM friendships
                 WHERE user_id = ? AND friend_id = ?
                 """;
 
@@ -182,15 +182,15 @@ public class UserDbStorage implements UserStorage {
         if (count == 0) {
             // Создаем обратную запись с подтвержденным статусом
             String insertSql = """
-                    INSERT INTO friendships (user_id, friend_id, status_id) 
+                    INSERT INTO friendships (user_id, friend_id, status_id)
                     VALUES (?, ?, 1)
                     """;
             jdbcTemplate.update(insertSql, friendId, userId);
         } else {
             // Обновляем обратную запись
             String updateSql = """
-                    UPDATE friendships 
-                    SET status_id = 1 
+                    UPDATE friendships
+                    SET status_id = 1
                     WHERE user_id = ? AND friend_id = ?
                     """;
             jdbcTemplate.update(updateSql, friendId, userId);
