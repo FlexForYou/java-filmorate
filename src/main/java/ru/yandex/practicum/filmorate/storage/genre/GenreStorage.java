@@ -7,5 +7,7 @@ import java.util.Optional;
 
 public interface GenreStorage {
     Optional<Genre> findById(Integer id);
+
     Collection<Genre> findAll();
+
 }
