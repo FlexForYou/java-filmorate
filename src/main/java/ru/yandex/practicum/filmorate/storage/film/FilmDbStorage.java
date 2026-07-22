@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,6 +14,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class FilmDbStorage implements FilmStorage {
@@ -155,16 +157,24 @@ public class FilmDbStorage implements FilmStorage {
     // Приватные методы для работы с жанрами
 
     private void saveGenres(Long filmId, Collection<Genre> genres) {
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+
         String sql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
 
-        // Проверяем существование жанров
-        for (Genre genre : genres) {
-            String checkSql = "SELECT COUNT(*) FROM genres WHERE id = ?";
-            Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, genre.getId());
-            if (count == null || count == 0) {
-                throw new ConditionsNotMetException("Жанр с id " + genre.getId() + " не найден");
-            }
-            jdbcTemplate.update(sql, filmId, genre.getId());
+        try {
+            jdbcTemplate.batchUpdate(sql, genres, genres.size(),
+                    (ps, genre) -> {
+                        ps.setLong(1, filmId);
+                        ps.setLong(2, genre.getId());
+                    });
+        } catch (DataIntegrityViolationException e) {
+            String genreNames = genres.stream()
+                    .map(Genre::getName)
+                    .collect(Collectors.joining(", "));
+
+            throw new ConditionsNotMetException("Жанр не найден: " + genreNames);
         }
     }
 
