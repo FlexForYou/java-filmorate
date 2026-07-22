@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface UserStorage {
+
     User add(User user);
 
     User update(User user);
@@ -17,4 +18,5 @@ public interface UserStorage {
     Collection<User> findAll();
 
     boolean existsById(Long id);
+
 }

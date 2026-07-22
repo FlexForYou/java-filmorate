@@ -3,41 +3,75 @@ package ru.yandex.practicum.filmorate;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
+import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
+import javax.sql.DataSource;
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.Set;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+
+@JdbcTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DisplayName("Тесты для Filmorate приложения")
 class FilmorateApplicationTests {
 
     private UserController userController;
     private FilmController filmController;
-    private InMemoryUserStorage userStorage;
-    private InMemoryFilmStorage filmStorage;
+    private UserDbStorage userStorage;
+    private FilmDbStorage filmStorage;
     private Validator validator;
+    private JdbcTemplate jdbcTemplate;
+    private UserRowMapper userRowMapper;
+    private FilmRowMapper filmRowMapper;
 
     @BeforeEach
     void setUp() {
-        userStorage = new InMemoryUserStorage();
-        filmStorage = new InMemoryFilmStorage();
+        // Создаем in-memory базу данных H2
+        DataSource dataSource = new EmbeddedDatabaseBuilder()
+                .setType(EmbeddedDatabaseType.H2)
+                .addScript("schema.sql")  // Создание таблиц
+                .addScript("data.sql")    // Заполнение справочных данных (mpa, genres)
+                .build();
 
+        jdbcTemplate = new JdbcTemplate(dataSource);
+
+        // Создаем мапперы с JdbcTemplate
+        userRowMapper = new UserRowMapper(jdbcTemplate);
+        filmRowMapper = new FilmRowMapper(jdbcTemplate);
+
+        // Инициализируем хранилища с JdbcTemplate
+        userStorage = new UserDbStorage(jdbcTemplate, userRowMapper);
+        filmStorage = new FilmDbStorage(jdbcTemplate, filmRowMapper);
+
+        // Создаем сервисы и контроллеры
         UserService userService = new UserService(userStorage);
-        FilmService filmService = new FilmService(filmStorage, userStorage);
+        FilmService filmService = new FilmService(filmStorage);
 
         userController = new UserController(userStorage, userService);
         filmController = new FilmController(filmStorage, filmService);
@@ -46,6 +80,19 @@ class FilmorateApplicationTests {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
+
+
+        @Test
+        public void testFindUserById() {
+
+            Optional<User> userOptional = userStorage.findById(1L);
+
+            assertThat(userOptional)
+                    .isPresent()
+                    .hasValueSatisfying(user ->
+                            assertThat(user).hasFieldOrPropertyWithValue("id", 1L)
+                    );
+        }
 
     // ==================== ТЕСТЫ ДЛЯ USER ====================
 
@@ -288,7 +335,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    @DisplayName("Обновление существующего пользователя ")
+    @DisplayName("Обновление существующего пользователя")
     void updateUser_existingUser_shouldUpdateFields() {
         // Создаем пользователя
         User originalUser = new User();
@@ -312,7 +359,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    @DisplayName("Получение пользователя по ID ")
+    @DisplayName("Получение пользователя по ID")
     void getUserById_existingUser_shouldReturnUser() {
         User user = new User();
         user.setEmail("test@example.com");
@@ -328,7 +375,7 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    @DisplayName("Удаление пользователя ")
+    @DisplayName("Удаление пользователя")
     void deleteUser_existingUser_shouldDelete() {
         User user = new User();
         user.setEmail("test@example.com");
